@@ -1,0 +1,6 @@
+{
+  "name": "OLX Classifieds Marketplace",
+  "description": "Full-featured OLX India classifieds clone with location search, category browsing, ad detail pages, sell flow, chat, user profile, and filters.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

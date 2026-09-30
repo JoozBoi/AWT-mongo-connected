@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+@layer base {
+  body {
+    font-family: 'Roboto', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: #002f34;
+    background-color: #f7f8f9;
+  }
+}
+
+/* Custom OLX Styling */
+.olx-brand-color {
+  color: #002f34;
+}
+
+.olx-bg-brand {
+  background-color: #002f34;
+}
+
+.olx-bg-teal {
+  background-color: #002f34;
+}
+
+.olx-border-brand {
+  border-color: #002f34;
+}
+
+/* OLX Sell Button Multi-color Border Effect */
+.olx-sell-btn {
+  background: white;
+  border-width: 5px;
+  border-style: solid;
+  border-image: linear-gradient(to right, #23e5db 0%, #ffce32 50%, #3a77ff 100%) 1;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+  transition: all 0.2s ease-in-out;
+}
+
+.olx-sell-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.18);
+}
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #002f34;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #001e22;
+}
+
+/* Custom animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Card hover animation */
+.olx-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.olx-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 20px rgba(0, 47, 52, 0.12);
+}

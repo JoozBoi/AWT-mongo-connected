@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OLX India - Buy & Sell Cars, Mobiles, Properties & More</title>
+  
+  <!-- Google Fonts: Roboto -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet">
+
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Tailwind CSS & Custom OLX Stylesheet -->
+  <link rel="stylesheet" href="/src/index.css" />
+</head>
+<body class="bg-[#f7f8f9] text-[#002f34] min-h-screen flex flex-col font-sans antialiased">
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+  <!-- 1. TOP HEADER NAVIGATION BAR -->
+  <header class="sticky top-0 z-40 bg-[#f7f8f9] border-b border-gray-200 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
+      
+      <!-- OLX Logo -->
+      <a href="/" class="flex items-center shrink-0">
+        <div class="bg-[#002f34] text-white font-black text-2xl tracking-tighter px-2.5 py-0.5 rounded">
+          OLX
+        </div>
+      </a>
+
+      <!-- Location Selector Dropdown -->
+      <div class="relative min-w-[180px] md:min-w-[220px] hidden sm:block">
+        <div class="flex items-center bg-white border-2 border-[#002f34] rounded px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-teal-500">
+          <i data-lucide="map-pin" class="w-4 h-4 text-[#002f34] shrink-0 mr-2"></i>
+          <select id="citySelect" class="w-full bg-transparent font-medium text-[#002f34] focus:outline-none cursor-pointer">
+            <option value="All India">All India</option>
+            <option value="Mumbai">Mumbai, Maharashtra</option>
+            <option value="Delhi">Delhi, NCR</option>
+            <option value="Bengaluru">Bengaluru, Karnataka</option>
+            <option value="Hyderabad">Hyderabad, Telangana</option>
+            <option value="Chennai">Chennai, Tamil Nadu</option>
+            <option value="Kolkata">Kolkata, West Bengal</option>
+            <option value="Pune">Pune, Maharashtra</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Main Search Input Bar -->
+      <div class="flex-1 max-w-2xl flex items-center">
+        <div class="flex w-full bg-white border-2 border-[#002f34] rounded overflow-hidden focus-within:ring-2 focus-within:ring-teal-500">
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Find Cars, Mobile Phones, Laptops, Properties and more..." 
+            class="w-full px-4 py-2 text-sm text-[#002f34] placeholder-gray-400 focus:outline-none"
+          />
+          <button class="bg-[#002f34] hover:bg-opacity-90 text-white px-5 flex items-center justify-center transition-colors">
+            <i data-lucide="search" class="w-5 h-5"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Right Header Controls -->
+      <div class="flex items-center gap-3 md:gap-5 shrink-0">
+        
+        <!-- Language Switcher -->
+        <button class="hidden lg:flex items-center gap-1 font-bold text-xs uppercase tracking-wider text-[#002f34] hover:opacity-80">
+          <span>ENGLISH</span>
+          <i data-lucide="chevron-down" class="w-4 h-4"></i>
+        </button>
+
+        <!-- Favorites Icon -->
+        <button onclick="showToast(`You have ${state.favorites.size} saved favorite items`)" class="relative p-2 text-[#002f34] hover:bg-gray-200/60 rounded-full transition-colors" title="Favorites">
+          <i data-lucide="heart" class="w-6 h-6"></i>
+          <span id="favBadge" class="absolute top-0 right-0 w-4 h-4 bg-rose-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">0</span>
+        </button>
+
+        <!-- Chat Inbox Icon -->
+        <button onclick="openChatModal()" class="relative p-2 text-[#002f34] hover:bg-gray-200/60 rounded-full transition-colors" title="Chat Inbox">
+          <i data-lucide="message-square" class="w-6 h-6"></i>
+          <span class="absolute top-0 right-0 w-2.5 h-2.5 bg-emerald-500 rounded-full"></span>
+        </button>
+
+        <!-- Login / User Account Area -->
+        <div id="userAuthContainer" class="flex items-center gap-2">
+          <!-- Dynamically updated by main.js: shows Login button or User Profile -->
+          <button onclick="openAuthModal('user')" class="font-bold text-sm text-[#002f34] underline decoration-2 underline-offset-4 hover:text-teal-700 transition-colors">
+            Login
+          </button>
+        </div>
+
+        <!-- Prominent + SELL Button -->
+        <button onclick="openSellModal()" class="olx-sell-btn px-4 py-1.5 rounded-full font-black text-sm text-[#002f34] uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="plus" class="w-4 h-4 stroke-[3]"></i>
+          <span>SELL</span>
+        </button>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- 2. SUBCATEGORY NAVIGATION STRIP -->
+  <nav class="bg-white border-b border-gray-200 shadow-2xs py-2">
+    <div class="max-w-7xl mx-auto px-4 flex items-center gap-2 overflow-x-auto no-scrollbar" id="categoryPills">
+      <!-- Category Pills injected dynamically by Vanilla JS -->
+    </div>
+  </nav>
+
+  <!-- 3. HERO / BANNER SECTION -->
+  <section class="max-w-7xl mx-auto px-4 mt-4">
+    <div class="bg-gradient-to-r from-[#002f34] via-[#004f58] to-[#002f34] text-white rounded-xl p-6 md:p-8 relative overflow-hidden shadow-sm flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="space-y-2 z-10 max-w-xl">
+        <span class="bg-yellow-400 text-[#002f34] font-black text-[11px] tracking-widest uppercase px-2.5 py-1 rounded">INDIA'S NO. 1 MARKETPLACE</span>
+        <h1 class="text-2xl md:text-3xl font-extrabold tracking-tight leading-tight">Buy & Sell Anything Near You</h1>
+        <p class="text-teal-100 text-sm">Join millions of buyers and sellers across India. Post your free classified ad in under 30 seconds!</p>
+      </div>
+
+      <div class="flex items-center gap-3 shrink-0 z-10">
+        <button onclick="openSellModal()" class="px-6 py-3 bg-yellow-400 hover:bg-yellow-300 text-[#002f34] font-black rounded-lg shadow-md transition-all flex items-center gap-2">
+          <i data-lucide="plus-circle" class="w-5 h-5"></i>
+          <span>Post Free Ad Now</span>
+        </button>
+      </div>
+      
+      <!-- Decorative background graphics -->
+      <div class="absolute -right-10 -bottom-10 w-64 h-64 bg-teal-500/10 rounded-full blur-2xl pointer-events-none"></div>
+    </div>
+  </section>
+
+  <!-- 4. MAIN CONTENT AREA (FILTERS & LISTINGS GRID) -->
+  <main class="max-w-7xl mx-auto px-4 py-8 flex-1 w-full">
+    
+    <!-- Top Filter Controls Bar -->
+    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6 bg-white p-4 rounded-xl border border-gray-200 shadow-2xs">
+      <div>
+        <h2 class="text-xl font-bold text-[#002f34]">Fresh Recommendations</h2>
+        <p id="resultsCount" class="text-xs text-gray-500">Loading ads...</p>
+      </div>
+
+      <!-- Quick Filter Options -->
+      <div class="flex flex-wrap items-center gap-3">
+        
+        <!-- Price Inputs -->
+        <div class="flex items-center gap-2 text-xs font-medium text-gray-600">
+          <span>Price (₹):</span>
+          <input type="number" id="minPriceInput" placeholder="Min" class="w-20 px-2 py-1 bg-gray-50 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#002f34]" />
+          <span>-</span>
+          <input type="number" id="maxPriceInput" placeholder="Max" class="w-24 px-2 py-1 bg-gray-50 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#002f34]" />
+        </div>
+
+        <!-- Sort By Dropdown -->
+        <div class="flex items-center gap-1 text-xs font-medium text-gray-600">
+          <span>Sort:</span>
+          <select id="sortBySelect" class="bg-gray-50 border border-gray-300 rounded px-2 py-1 text-xs text-[#002f34] focus:outline-none cursor-pointer">
+            <option value="featured">Featured First</option>
+            <option value="price_asc">Price: Low to High</option>
+            <option value="price_desc">Price: High to Low</option>
+          </select>
+        </div>
+
+        <!-- Reset Button -->
+        <button onclick="resetFilters()" class="text-xs font-bold text-teal-700 hover:underline px-2 py-1">
+          Reset Filters
+        </button>
+
+      </div>
+    </div>
+
+    <!-- Ad Cards Grid -->
+    <div id="listingsGrid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      <!-- Listings rendered dynamically by main.js -->
+    </div>
+
+  </main>
+
+  <!-- 5. APP DOWNLOAD PROMO BANNER -->
+  <section class="bg-[#f2f4f5] border-t border-gray-300 py-8 mt-12">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col md:flex-row items-center justify-between gap-6">
+      <div class="flex items-center gap-6">
+        <div class="w-24 h-24 bg-[#002f34] text-white font-black text-3xl flex items-center justify-center rounded-2xl shadow-lg shrink-0">
+          OLX
+        </div>
+        <div>
+          <h3 class="text-2xl font-black text-[#002f34]">TRY THE OLX APP</h3>
+          <p class="text-sm text-gray-600">Buy, sell and find anything using the app on your mobile phone.</p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-4">
+        <a href="#" class="bg-black text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 hover:opacity-80">
+          <i data-lucide="apple" class="w-6 h-6"></i>
+          <div>
+            <span class="block text-[10px] text-gray-400">Download on the</span>
+            <span class="text-sm font-bold">App Store</span>
+          </div>
+        </a>
+        <a href="#" class="bg-black text-white px-4 py-2 rounded-lg text-xs font-semibold flex items-center gap-2 hover:opacity-80">
+          <i data-lucide="play" class="w-6 h-6 fill-white"></i>
+          <div>
+            <span class="block text-[10px] text-gray-400">GET IT ON</span>
+            <span class="text-sm font-bold">Google Play</span>
+          </div>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- 6. FOOTER SECTION -->
+  <footer class="bg-[#ebeeef] border-t border-gray-300 text-gray-600 text-xs py-10">
+    <div class="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-8">
+      <div>
+        <h4 class="font-bold text-[#002f34] uppercase tracking-wider mb-3">Popular Locations</h4>
+        <ul class="space-y-1.5 text-gray-600">
+          <li><a href="#" class="hover:text-[#002f34]">Kolkata</a></li>
+          <li><a href="#" class="hover:text-[#002f34]">Mumbai</a></li>
+          <li><a href="#" class="hover:text-[#002f34]">Chennai</a></li>
+          <li><a href="#" class="hover:text-[#002f34]">Delhi</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="font-bold text-[#002f34] uppercase tracking-wider mb-3">Trending Locations</h4>
+        <ul class="space-y-1.5 text-gray-600">
+          <li><a href="#" class="hover:text-[#002f34]">Bhubaneshwar</a></li>
+          <li><a href="#" class="hover:text-[#002f34]">Hyderabad</a></li>
+          <li><a href="#" class="hover:text-[#002f34]">Chandigarh</a></li>
+          <li><a href="#" class="hover:text-[#002f34]">Nashik</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="font-bold text-[#002f34] uppercase tracking-wider mb-3">About Us</h4>
+        <ul class="space-y-1.5 text-gray-600">
+          <li><a href="#" class="hover:text-[#002f34]">Tech@OLX</a></li>
+          <li><a href="#" class="hover:text-[#002f34]">Careers</a></li>
+          <li><a href="#" class="hover:text-[#002f34]">Contact Us</a></li>
+          <li><a href="#" class="hover:text-[#002f34]">OLX People</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h4 class="font-bold text-[#002f34] uppercase tracking-wider mb-3">OLX</h4>
+        <ul class="space-y-1.5 text-gray-600">
+          <li><a href="#" class="hover:text-[#002f34]">Help</a></li>
+          <li><a href="#" class="hover:text-[#002f34]">Sitemap</a></li>
+          <li><a href="#" class="hover:text-[#002f34]">Legal & Privacy information</a></li>
+          <li><a href="#" class="hover:text-[#002f34]">Vulnerability Disclosure Program</a></li>
+        </ul>
+      </div>
+
+      <div class="col-span-2 md:col-span-1">
+        <h4 class="font-bold text-[#002f34] uppercase tracking-wider mb-3">Follow Us</h4>
+        <div class="flex items-center gap-3 text-[#002f34] mb-4">
+          <a href="#" class="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-[#002f34] hover:text-white transition-colors"><i data-lucide="facebook" class="w-4 h-4"></i></a>
+          <a href="#" class="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-[#002f34] hover:text-white transition-colors"><i data-lucide="instagram" class="w-4 h-4"></i></a>
+          <a href="#" class="w-8 h-8 rounded-full border border-gray-400 flex items-center justify-center hover:bg-[#002f34] hover:text-white transition-colors"><i data-lucide="twitter" class="w-4 h-4"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Copyright Bar -->
+    <div class="bg-[#002f34] text-white text-[11px] py-4">
+      <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+        <span>Help - Sitemap</span>
+        <span>All rights reserved © 2006-2026 OLX</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================== -->
+  <!-- MODALS SECTION                             -->
+  <!-- ========================================== -->
+
+  <!-- A. LOGIN / REGISTER AUTH MODAL (WITH REGEX VALIDATIONS) -->
+  <div id="authModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-md rounded-2xl shadow-2xl overflow-hidden relative p-6 animate-fade-in">
+      
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-gray-500 hover:text-black">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+
+      <!-- Auth Branding Header -->
+      <div class="text-center mb-6">
+        <div class="w-14 h-14 bg-[#002f34] text-white font-black text-2xl flex items-center justify-center rounded-2xl mx-auto mb-2 shadow-md">
+          OLX
+        </div>
+        <h2 id="authTitle" class="text-2xl font-black text-[#002f34]">Welcome to OLX</h2>
+        <p class="text-xs text-gray-500 mt-1">Sign in or register with verified credentials</p>
+      </div>
+
+      <!-- Auth Tab Switcher -->
+      <div class="flex border-b border-gray-200 mb-4">
+        <button id="tabUser" onclick="switchAuthTab('user')" class="flex-1 py-2 font-bold text-xs sm:text-sm text-center border-b-2 border-[#002f34] text-[#002f34] flex items-center justify-center gap-1.5 transition-all">
+          <i data-lucide="user" class="w-4 h-4"></i>
+          <span>User Login</span>
+        </button>
+        <button id="tabAdmin" onclick="switchAuthTab('admin')" class="flex-1 py-2 font-bold text-xs sm:text-sm text-center border-b-2 border-transparent text-gray-400 hover:text-gray-700 flex items-center justify-center gap-1.5 transition-all">
+          <i data-lucide="shield" class="w-4 h-4 text-amber-500"></i>
+          <span>Admin Login</span>
+        </button>
+        <button id="tabRegister" onclick="switchAuthTab('register')" class="flex-1 py-2 font-bold text-xs sm:text-sm text-center border-b-2 border-transparent text-gray-400 hover:text-gray-700 flex items-center justify-center gap-1.5 transition-all">
+          <i data-lucide="user-plus" class="w-4 h-4"></i>
+          <span>Register</span>
+        </button>
+      </div>
+
+      <!-- Role-Specific Diagnostic/Explainer Banner -->
+      <div id="authRoleBanner" class="bg-teal-50 border border-teal-200 p-2.5 rounded-lg mb-3 text-[11px] text-teal-800 flex items-start gap-2">
+        <i data-lucide="info" class="w-4 h-4 text-teal-600 shrink-0 mt-0.5"></i>
+        <div id="authRoleBannerText">
+          <strong class="block font-bold">Standard User Mode:</strong>
+          <span>Access marketplace features, post ads, save favorites, and chat with sellers without database clutter.</span>
+        </div>
+      </div>
+
+      <!-- Quick Demo Account Auto-Fill Helper -->
+      <div id="demoAccountHelper" class="mb-3">
+        <button type="button" id="btnFillDemo" onclick="fillCurrentDemoCredentials()" class="w-full py-1.5 px-3 bg-gray-50 hover:bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg border border-gray-300 flex items-center justify-center gap-2 transition-colors cursor-pointer">
+          <i data-lucide="key" class="w-3.5 h-3.5 text-teal-700"></i>
+          <span id="btnFillDemoText">Auto-fill Demo User: rahul.varma@gmail.com</span>
+        </button>
+      </div>
+
+      <!-- Auth Form -->
+      <form id="authForm" onsubmit="handleAuthSubmit(event)" class="space-y-3.5 text-sm" novalidate>
+        
+        <!-- Full Name (Only for Register) -->
+        <div id="authNameGroup" class="hidden">
+          <label class="block font-bold text-[#002f34] mb-1">Full Name *</label>
+          <input 
+            type="text" 
+            id="authName" 
+            placeholder="e.g. Rahul Varma" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#002f34] transition-colors"
+          />
+          <span id="authNameError" class="text-[11px] text-rose-600 font-medium hidden mt-1">
+            Name must contain only letters and spaces (3-50 chars).
+          </span>
+        </div>
+
+        <!-- Email Address -->
+        <div>
+          <label class="block font-bold text-[#002f34] mb-1">Email Address *</label>
+          <input 
+            type="email" 
+            id="authEmail" 
+            required 
+            placeholder="e.g. rahul.varma@gmail.com" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#002f34] transition-colors"
+          />
+          <span id="authEmailError" class="text-[11px] text-rose-600 font-medium hidden mt-1">
+            Please enter a valid email address (e.g., name@domain.com).
+          </span>
+        </div>
+
+        <!-- Phone Number (Indian Format Regex) -->
+        <div>
+          <label class="block font-bold text-[#002f34] mb-1">Mobile Phone Number *</label>
+          <input 
+            type="tel" 
+            id="authPhone" 
+            required 
+            placeholder="e.g. 9876543210 or +91 9876543210" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#002f34] transition-colors"
+          />
+          <span id="authPhoneError" class="text-[11px] text-rose-600 font-medium hidden mt-1">
+            Enter valid 10-digit Indian phone number starting with 6-9 (e.g. 9876543210 or +91 9876543210).
+          </span>
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block font-bold text-[#002f34] mb-1">Password *</label>
+          <input 
+            type="password" 
+            id="authPassword" 
+            required 
+            placeholder="••••••••" 
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#002f34] transition-colors"
+          />
+          <span id="authPasswordError" class="text-[11px] text-rose-600 font-medium hidden mt-1">
+            Password must be min 8 characters with 1 uppercase, 1 lowercase, 1 digit, and 1 special symbol (@$!%*?&).
+          </span>
+        </div>
+
+        <button type="submit" id="authSubmitBtn" class="w-full py-3 bg-[#002f34] hover:bg-opacity-90 text-white font-bold rounded-lg shadow-md transition-all mt-2">
+          Log In
+        </button>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- B. AD DETAIL MODAL -->
+  <div id="detailModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-[#f7f8f9] w-full max-w-5xl max-h-[90vh] rounded-2xl shadow-2xl overflow-y-auto relative animate-fade-in">
+      <button onclick="closeDetailModal()" class="absolute top-4 right-4 z-20 w-10 h-10 rounded-full bg-black/50 text-white hover:bg-black flex items-center justify-center transition-colors">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+      <div id="detailModalContent"></div>
+    </div>
+  </div>
+
+  <!-- C. SELL AD MODAL (WITH REGEX VALIDATIONS) -->
+  <div id="sellModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-2xl max-h-[90vh] rounded-2xl shadow-2xl overflow-y-auto relative p-6 animate-fade-in">
+      <button onclick="closeSellModal()" class="absolute top-4 right-4 text-gray-500 hover:text-black">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+
+      <div class="mb-4">
+        <span class="bg-yellow-400 text-[#002f34] font-black text-[10px] tracking-widest uppercase px-2 py-0.5 rounded">POST AD</span>
+        <h2 class="text-2xl font-black text-[#002f34] mt-1">Post Your Classified Ad</h2>
+        <p class="text-xs text-gray-500">Include genuine details to get inquiries faster from buyers.</p>
+      </div>
+
+      <!-- Regex Badge Info -->
+      <div class="bg-amber-50 border border-amber-200 p-2.5 rounded-lg mb-4 text-[11px] text-amber-900 flex items-start gap-2">
+        <i data-lucide="shield-check" class="w-4 h-4 text-amber-600 shrink-0 mt-0.5"></i>
+        <span>Ad Title (5-80 chars) and Price (positive numbers) are verified using Regular Expressions.</span>
+      </div>
+
+      <form id="sellForm" onsubmit="handlePostAdSubmit(event)" class="space-y-4 text-sm" novalidate>
+        <div>
+          <label class="block font-bold text-[#002f34] mb-1">Ad Title *</label>
+          <input type="text" id="postTitle" required placeholder="e.g. iPhone 14 Pro 128GB Space Black with Box" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#002f34]" />
+          <span id="postTitleError" class="text-[11px] text-rose-600 font-medium hidden mt-1">
+            Title must be 5-80 characters long (letters, numbers, spaces, commas).
+          </span>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-[#002f34] mb-1">Category *</label>
+            <select id="postCategory" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#002f34] bg-white">
+              <option value="cars">Cars</option>
+              <option value="mobiles">Mobiles</option>
+              <option value="properties">Properties</option>
+              <option value="bikes">Bikes</option>
+              <option value="electronics">Electronics & Appliances</option>
+              <option value="furniture">Furniture</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-[#002f34] mb-1">Price (₹) *</label>
+            <input type="number" id="postPrice" required placeholder="e.g. 45000" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#002f34]" />
+            <span id="postPriceError" class="text-[11px] text-rose-600 font-medium hidden mt-1">
+              Price must be a valid positive number without decimals or leading zeros.
+            </span>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-[#002f34] mb-1">City *</label>
+            <input type="text" id="postCity" required placeholder="e.g. Mumbai" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#002f34]" />
+          </div>
+
+          <div>
+            <label class="block font-bold text-[#002f34] mb-1">Locality / Area</label>
+            <input type="text" id="postLocality" placeholder="e.g. Andheri West" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#002f34]" />
+          </div>
+        </div>
+
+        <div>
+          <label class="block font-bold text-[#002f34] mb-1">Image URL</label>
+          <input type="url" id="postImage" placeholder="https://images.unsplash.com/photo-..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#002f34]" />
+          <span id="postImageError" class="text-[11px] text-rose-600 font-medium hidden mt-1">
+            Please enter a valid HTTP or HTTPS image URL.
+          </span>
+        </div>
+
+        <div>
+          <label class="block font-bold text-[#002f34] mb-1">Description *</label>
+          <textarea id="postDescription" rows="3" required placeholder="Describe what you are selling, condition, reason for selling, warranty details..." class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-[#002f34]"></textarea>
+        </div>
+
+        <div class="pt-2 flex items-center justify-end gap-3">
+          <button type="button" onclick="closeSellModal()" class="px-5 py-2.5 text-gray-600 font-bold hover:bg-gray-100 rounded-lg">Cancel</button>
+          <button type="submit" class="px-6 py-2.5 bg-[#002f34] hover:bg-opacity-90 text-white font-bold rounded-lg shadow-md">Post Ad Now</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- D. CHAT INBOX MODAL -->
+  <div id="chatModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white w-full max-w-4xl h-[80vh] rounded-2xl shadow-2xl overflow-hidden flex flex-col md:flex-row relative animate-fade-in">
+      
+      <button onclick="closeChatModal()" class="absolute top-3 right-3 z-30 text-gray-400 hover:text-black">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+
+      <!-- Conversations Sidebar -->
+      <div class="w-full md:w-80 border-r border-gray-200 flex flex-col h-full bg-gray-50">
+        <div class="p-4 border-b border-gray-200 bg-white">
+          <h3 class="font-black text-[#002f34] text-lg">Inbox Chats</h3>
+        </div>
+        <div id="chatConversationsList" class="flex-1 overflow-y-auto">
+          <!-- Conversations injected by Vanilla JS -->
+        </div>
+      </div>
+
+      <!-- Chat Messages Stage -->
+      <div class="flex-1 flex flex-col h-full bg-white">
+        <!-- Chat Header -->
+        <div id="chatHeaderTitle" class="p-4 border-b border-gray-200 bg-white">
+          <span class="text-xs text-gray-400">Select a conversation to start chatting</span>
+        </div>
+
+        <!-- Messages Area -->
+        <div id="chatMessagesWindow" class="flex-1 p-4 overflow-y-auto bg-[#f0f2f5]">
+          <!-- Messages injected by Vanilla JS -->
+        </div>
+
+        <!-- Chat Input Form -->
+        <form onsubmit="handleSendMessage(event)" class="p-3 border-t border-gray-200 bg-white flex items-center gap-2">
+          <input type="text" id="chatInput" placeholder="Type a message to the seller..." class="flex-1 px-4 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:border-[#002f34]" />
+          <button type="submit" class="p-2.5 bg-[#002f34] text-white rounded-full hover:bg-opacity-90">
+            <i data-lucide="send" class="w-4 h-4"></i>
+          </button>
+        </form>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Entry Script -->
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
